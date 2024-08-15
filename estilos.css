@@ -10,7 +10,7 @@ body {
 }
 
 /* Estilos para el contenedor de inicio de sesión */
-.login-container {
+.contenedor-login {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
@@ -64,7 +64,7 @@ button:hover {
     background-color: #005bb5;
 }
 
-.dashboard-container {
+.contenedor-dashboard {
     display: flex;
     width: 100%;
     height: 100vh;
@@ -72,7 +72,7 @@ button:hover {
     background-color: #f0f2f5;
 }
 
-.sidebar {
+.barra-lateral {
     width: 200px;
     background-color: #343a40;
     padding: 10px;
@@ -81,16 +81,16 @@ button:hover {
     justify-content: space-between;
 }
 
-.sidebar ul {
+.barra-lateral ul {
     list-style-type: none;
     padding: 0;
 }
 
-.sidebar ul li {
+.barra-lateral ul li {
     margin: 10px 0;
 }
 
-.sidebar ul li a {
+.barra-lateral ul li a {
     color: #ffffff;
     text-decoration: none;
     display: block;
@@ -99,21 +99,21 @@ button:hover {
     transition: background-color 0.3s;
 }
 
-.sidebar ul li a:hover {
+.barra-lateral ul li a:hover {
     background-color: #495057;
 }
 
-.content {
+.contenido {
     flex-grow: 1;
     padding: 20px;
     overflow-y: auto;
 }
 
-.section {
+.seccion {
     display: none;
 }
 
-.new-ticket-btn {
+.boton-nuevo-ticket, .boton-nuevo-usuario {
     padding: 10px 20px;
     background-color: #28a745;
     color: #ffffff;
@@ -123,11 +123,11 @@ button:hover {
     margin-bottom: 20px;
 }
 
-.new-ticket-btn:hover {
+.boton-nuevo-ticket:hover, .boton-nuevo-usuario:hover {
     background-color: #218838;
 }
 
-.logout-btn {
+.boton-cerrar-sesion {
     padding: 10px;
     background-color: #dc3545;
     color: #ffffff;
@@ -138,7 +138,7 @@ button:hover {
     margin-top: auto;
 }
 
-.logout-btn:hover {
+.boton-cerrar-sesion:hover {
     background-color: #c82333;
 }
 
@@ -158,28 +158,6 @@ button:hover {
     background-color: #f2f2f2;
 }
 
-#user-stats {
-    width: 50%;
-    margin: auto;
-}
-
-#ticket-count {
-    text-align: center;
-    margin-top: 20px;
-}
-
-#ticket-history {
-    text-align: center;
-    margin-top: 20px;
-}
-
-#history-list {
-    list-style-type: none;
-    padding: 0;
-    text-align: left;
-    display: inline-block;
-}
-
 /* Estilos para el modal */
 .modal {
     display: none;
@@ -194,7 +172,7 @@ button:hover {
     padding-top: 60px;
 }
 
-.modal-content {
+.contenido-modal {
     background-color: #fefefe;
     margin: 5% auto;
     padding: 20px;
@@ -204,15 +182,15 @@ button:hover {
     border-radius: 10px;
 }
 
-.close {
+.cerrar {
     color: #aaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
 }
 
-.close:hover,
-.close:focus {
+.cerrar:hover,
+.cerrar:focus {
     color: black;
     text-decoration: none;
     cursor: pointer;
