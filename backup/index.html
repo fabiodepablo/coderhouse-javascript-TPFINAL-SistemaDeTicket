@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Ticket - Inicio de Sesión y Gestión de Usuarios</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Sistema de Tickets - Inicio de Sesión y Gestión de Usuarios</title>
+    <link rel="stylesheet" href="estilos.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Integración de Chart.js -->
 </head>
 <body>
     <div id="app">
         <!-- Contenedor de Inicio de Sesión -->
-        <div class="login-container" id="login-container">
-            <div class="login-box">
-                <img src="logo.png" alt="Logo Sistema Ticket" class="logo">
+        <div class="contenedor-login" id="contenedor-login">
+            <div class="caja-login">
+                <img src="logo.png" alt="Logo Sistema de Tickets" class="logo">
                 <h2>Por favor Inicie Sesión</h2>
-                <form onsubmit="return login(event)">
-                    <label for="username">Usuario:</label>
-                    <input type="text" id="username" name="username" required>
+                <form id="formulario-login">
+                    <label for="usuario">Usuario:</label>
+                    <input type="text" id="usuario" name="usuario" required>
                     
-                    <label for="password">Contraseña:</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="contrasena">Contraseña:</label>
+                    <input type="password" id="contrasena" name="contrasena" required>
                     
                     <button type="submit">Iniciar Sesión</button>
                 </form>
@@ -26,37 +27,40 @@
         </div>
 
         <!-- Contenedor del Dashboard (visible después de iniciar sesión) -->
-        <div class="dashboard-container" id="dashboard-container" style="display: none;">
-            <nav class="sidebar">
+        <div class="contenedor-dashboard" id="contenedor-dashboard" style="display: none;">
+            <nav class="barra-lateral">
                 <ul>
-                    <li><a href="#" onclick="showSection('inicio')">Inicio</a></li>
-                    <li><a href="#" onclick="showSection('tickets')">Tickets</a></li>
-                    <li id="usuarios-link" style="display: none;"><a href="#" onclick="showSection('usuarios')">Usuarios</a></li>
+                    <li><a href="#" id="enlace-inicio">Inicio</a></li>
+                    <li><a href="#" id="enlace-tickets">Tickets</a></li>
+                    <li id="enlace-usuarios" style="display: none;"><a href="#" id="boton-enlace-usuarios">Usuarios</a></li>
                 </ul>
-                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+                <button class="boton-cerrar-sesion" id="boton-cerrar-sesion">Cerrar Sesión</button>
             </nav>
-            <div class="content">
-                <div id="inicio" class="section">
+            <div class="contenido">
+                <div id="inicio" class="seccion">
                     <h2>Inicio</h2>
-                    <div id="user-info">
-                        <p><strong>Usuario:</strong> <span id="user-name"></span></p>
-                        <p><strong>Departamento:</strong> <span id="user-department"></span></p>
+                    <div id="info-usuario">
+                        <p><strong>Usuario:</strong> <span id="nombre-usuario"></span></p>
+                        <p><strong>Departamento:</strong> <span id="departamento-usuario"></span></p>
                     </div>
-                    <div id="ticket-info">
+                    <div id="info-tickets">
                         <h3>Resumen de Tickets</h3>
-                        <p><strong>Tickets Asignados:</strong> <span id="ticket-count-assigned"></span></p>
-                        <p><strong>Tickets Creados:</strong> <span id="ticket-count-created"></span></p>
+                        <p><strong>Tickets Asignados:</strong> <span id="contador-tickets-asignados"></span></p>
+                        <p><strong>Tickets Creados:</strong> <span id="contador-tickets-creados"></span></p>
                     </div>
-                    <div id="ticket-history">
+                    <div id="contenedor-grafico">
+                        <canvas id="grafico-tickets"></canvas>
+                    </div>
+                    <div id="historial-tickets">
                         <h3>Historial de Actividades</h3>
-                        <ul id="history-list">
+                        <ul id="lista-historial">
                             <!-- Aquí se llenarán las actividades del usuario logueado -->
                         </ul>
                     </div>
                 </div>
-                <div id="tickets" class="section" style="display: none;">
+                <div id="tickets" class="seccion" style="display: none;">
                     <h2>Tickets</h2>
-                    <button class="new-ticket-btn" onclick="showSection('nuevo-ticket')">Nuevo Ticket</button>
+                    <button class="boton-nuevo-ticket" id="boton-nuevo-ticket">Nuevo Ticket</button>
                     <table id="tabla-tickets">
                         <thead>
                             <tr>
@@ -76,54 +80,9 @@
                         </tbody>
                     </table>
                 </div>
-                <div id="usuarios" class="section" style="display: none;">
+                <div id="usuarios" class="seccion" style="display: none;">
                     <h2>Usuarios</h2>
-                    <form id="user-form" onsubmit="return createUser(event)">
-                        <input type="hidden" id="edit-user-index">
-                        <label for="nombre-usuario">Nombre de Usuario:</label>
-                        <input type="text" id="nombre-usuario" name="nombre-usuario" required>
-
-                        <label for="password-usuario">Contraseña:</label>
-                        <input type="password" id="password-usuario" name="password-usuario" required>
-                        
-                        <label for="nombre">Nombre:</label>
-                        <input type="text" id="nombre" name="nombre" required>
-                        
-                        <label for="apellido">Apellido:</label>
-                        <input type="text" id="apellido" name="apellido" required>
-                        
-                        <label for="cargo">Cargo:</label>
-                        <select id="cargo" name="cargo" required>
-                            <option value="Gerente">Gerente</option>
-                            <option value="Cordinador">Cordinador</option>
-                            <option value="Referente">Referente</option>
-                            <option value="Equipo">Equipo</option>
-                        </select>
-                        
-                        <label for="area">Área:</label>
-                        <select id="area" name="area" required>
-                            <option value="Sistema">Sistema</option>
-                            <option value="Compras">Compras</option>
-                            <option value="Comercial">Comercial</option>
-                            <option value="Logistica">Logística</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="RRHH">RRHH</option>
-                            <option value="Administracion">Administración</option>
-                            <option value="Mantenimiento">Mantenimiento</option>
-                            <option value="Ventas">Ventas</option>
-                        </select>
-
-                        <label for="mail">Mail:</label>
-                        <input type="email" id="mail" name="mail" required>
-
-                        <label for="administra">Administra:</label>
-                        <select id="administra" name="administra" required>
-                            <option value="si">Si</option>
-                            <option value="no">No</option>
-                        </select>
-                        
-                        <button type="submit">Guardar Usuario</button>
-                    </form>
+                    <button class="boton-nuevo-usuario" id="boton-nuevo-usuario">Crear Usuario</button>
                     <h3>Lista de Usuarios</h3>
                     <table id="tabla-usuarios">
                         <thead>
@@ -134,7 +93,7 @@
                                 <th>Apellido</th>
                                 <th>Cargo</th>
                                 <th>Área</th>
-                                <th>Mail</th>
+                                <th>Correo</th>
                                 <th>Administra</th>
                                 <th>Acciones</th>
                             </tr>
@@ -144,114 +103,38 @@
                         </tbody>
                     </table>
                 </div>
-                <div id="nuevo-ticket" class="section" style="display: none;">
-                    <h2>Crear Nuevo Ticket</h2>
-                    <form onsubmit="return createTicket(event)">
-                        <label for="tipo">Tipo:</label>
-                        <input type="text" id="tipo" name="tipo" required>
-
-                        <label for="titulo">Título:</label>
-                        <input type="text" id="titulo" name="titulo" required>
-                        
-                        <label for="descripcion">Descripción:</label>
-                        <textarea id="descripcion" name="descripcion" required></textarea>
-
-                        <label for="departamento">Departamento:</label>
-                        <select id="departamento" name="departamento" onchange="updateUsuarios()" required>
-                            <option value="Sistema">Sistema</option>
-                            <option value="Compras">Compras</option>
-                            <option value="Comercial">Comercial</option>
-                            <option value="Logistica">Logística</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="RRHH">RRHH</option>
-                            <option value="Administracion">Administración</option>
-                            <option value="Mantenimiento">Mantenimiento</option>
-                            <option value="Ventas">Ventas</option>
-                        </select>
-                        
-                        <label for="usuario">Usuario:</label>
-                        <select id="usuario" name="usuario" required>
-                            <option value="Todos">Todos</option>
-                        </select>
-                        
-                        <label for="prioridad">Prioridad:</label>
-                        <select id="prioridad" name="prioridad" required>
-                            <option value="Alta">Alta</option>
-                            <option value="Media">Media</option>
-                            <option value="Baja">Baja</option>
-                        </select>
-                        
-                        <label for="estado">Estado:</label>
-                        <select id="estado" name="estado" required>
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="En desarrollo">En desarrollo</option>
-                            <option value="Cancelado">Cancelado</option>
-                            <option value="Finalizado">Finalizado</option>
-                        </select>
-                        
-                        <button type="submit">Agregar Ticket</button>
-                    </form>
-                </div>
             </div>
         </div>
 
-        <!-- Modal para editar tickets -->
-        <div id="edit-modal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeEditModal()">&times;</span>
-                <h2>Editar Ticket</h2>
-                <form onsubmit="return saveTicketChanges(event)">
-                    <label for="edit-titulo">Título:</label>
-                    <input type="text" id="edit-titulo" required>
+        <!-- Modal para crear/editar usuarios -->
+        <div id="modal-usuario" class="modal">
+            <div class="contenido-modal">
+                <span class="cerrar" id="cerrar-modal-usuario">&times;</span>
+                <h2 id="titulo-modal-usuario">Crear Usuario</h2>
+                <form id="formulario-usuario">
+                    <input type="hidden" id="indice-editar-usuario">
+                    <label for="nombre-usuario">Nombre de Usuario:</label>
+                    <input type="text" id="nombre-usuario" name="nombre-usuario" required>
+
+                    <label for="contrasena-usuario">Contraseña:</label>
+                    <input type="password" id="contrasena-usuario" name="contrasena-usuario" required>
                     
-                    <label for="edit-tipo">Tipo:</label>
-                    <input type="text" id="edit-tipo" required>
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" required>
                     
-                    <label for="edit-descripcion">Descripción:</label>
-                    <textarea id="edit-descripcion" required></textarea>
+                    <label for="apellido">Apellido:</label>
+                    <input type="text" id="apellido" name="apellido" required>
                     
-                    <label for="edit-prioridad">Prioridad:</label>
-                    <select id="edit-prioridad" required>
-                        <option value="Alta">Alta</option>
-                        <option value="Media">Media</option>
-                        <option value="Baja">Baja</option>
+                    <label for="cargo">Cargo:</label>
+                    <select id="cargo" name="cargo" required>
+                        <option value="Gerente">Gerente</option>
+                        <option value="Coordinador">Coordinador</option>
+                        <option value="Referente">Referente</option>
+                        <option value="Equipo">Equipo</option>
                     </select>
                     
-                    <label for="edit-estado">Estado:</label>
-                    <select id="edit-estado" required>
-                        <option value="Pendiente">Pendiente</option>
-                        <option value="En desarrollo">En desarrollo</option>
-                        <option value="Cancelado">Cancelado</option>
-                        <option value="Finalizado">Finalizado</option>
-                    </select>
-                    
-                    <button type="submit">Guardar Cambios</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal para agregar nota -->
-        <div id="nota-modal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeNotaModal()">&times;</span>
-                <h2>Agregar Nota al Ticket</h2>
-                <form onsubmit="return saveNota(event)">
-                    <label for="nota-contenido">Nota:</label>
-                    <textarea id="nota-contenido" required></textarea>
-                    <button type="submit">Guardar Nota</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal para transferir tickets -->
-        <div id="transfer-modal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeTransferModal()">&times;</span>
-                <h2>Transferir Ticket</h2>
-                <form onsubmit="return transferTicket(event)">
-                    <label for="transfer-departamento">Departamento:</label>
-                    <select id="transfer-departamento" onchange="updateTransferUsuarios()" required>
-                        <option value="">Seleccione un departamento</option>
+                    <label for="area">Área:</label>
+                    <select id="area" name="area" required>
                         <option value="Sistema">Sistema</option>
                         <option value="Compras">Compras</option>
                         <option value="Comercial">Comercial</option>
@@ -262,19 +145,22 @@
                         <option value="Mantenimiento">Mantenimiento</option>
                         <option value="Ventas">Ventas</option>
                     </select>
-                    
-                    <label for="transfer-usuario">Usuario:</label>
-                    <select id="transfer-usuario" required>
-                        <option value="Todos">Todos</option>
+
+                    <label for="correo">Correo:</label>
+                    <input type="email" id="correo" name="correo" required>
+
+                    <label for="administra">Administra:</label>
+                    <select id="administra" name="administra" required>
+                        <option value="si">Si</option>
+                        <option value="no">No</option>
                     </select>
                     
-                    <button type="submit">Transferir Ticket</button>
+                    <button type="submit">Guardar Usuario</button>
                 </form>
             </div>
         </div>
 
+        <script src="scripts.js"></script>
     </div>
-
-    <script src="scripts.js"></script>
 </body>
 </html>

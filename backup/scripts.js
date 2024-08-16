@@ -1,135 +1,174 @@
-// Datos de usuario de ejemplo
-const users = [
-    { username: 'admin', password: 'admin', role: 'admin', department: 'Sistemas', nombre: 'Admin', apellido: 'Admin', mail: 'sistemas@andretich.com.ar', administra: 'si' },
-    { username: 'ventasu', password: 'ventasu', role: 'usuario', department: 'Ventas', nombre: 'Ventas', apellido: 'Usuario', mail: 'ventas@andretich.com.ar', administra: 'no' },
-    { username: 'mkt', password: 'mktu', role: 'usuario', department: 'Marketing', nombre: 'MKT', apellido: 'Usuario', mail: 'marketing@andretich.com.ar', administra: 'no' },
-    { username: 'ventasg', password: 'ventasg', role: 'gerente', department: 'Ventas', nombre: 'Ventas', apellido: 'Gerente', mail: 'ventas@andretich.com.ar', administra: 'no' },
-    { username: 'mktg', password: 'mktg', role: 'gerente', department: 'Marketing', nombre: 'MKT', apellido: 'Gerente', mail: 'marketing@andretich.com.ar', administra: 'no' }
-];
+// Datos de usuarios (inicialmente vacío, se llenará desde el JSON)
+let usuarios = [];
 
 // Datos de tickets
 const tickets = [];
 
 // Historial de actividades
-const history = [];
+const historial = [];
 
 // Variables globales
-let currentUser = null;
-let ticketToEdit = null;
-let ticketToAddNota = null;
-let transferTicketObj = null;
+let usuarioActual = null;
+let ticketAEditar = null;
+let ticketParaAgregarNota = null;
+let ticketParaTransferir = null;
+let graficoTickets = null; // Variable para mantener la referencia al gráfico
+
+// Modal de usuario
+let modalUsuario = null;
+
+// Función para cargar usuarios desde un archivo JSON
+function cargarUsuariosDesdeJson() {
+    fetch('usuarios.json')
+        .then(response => response.json())
+        .then(data => {
+            usuarios = data;
+            inicializarAplicacion();
+        })
+        .catch(error => console.error('Error al cargar el archivo usuarios.json:', error));
+}
+
+// Inicializar la aplicación una vez cargados los usuarios
+function inicializarAplicacion() {
+    usuarioActual = JSON.parse(localStorage.getItem('usuarioActual'));
+    if (usuarioActual) {
+        mostrarDashboard(usuarioActual.rol);
+    } else {
+        mostrarLogin();
+    }
+
+    // Asignar eventos desde el JS
+    document.getElementById('formulario-login').onsubmit = iniciarSesion;
+    document.getElementById('boton-cerrar-sesion').onclick = cerrarSesion;
+    document.getElementById('enlace-inicio').onclick = () => mostrarSeccion('inicio');
+    document.getElementById('enlace-tickets').onclick = () => mostrarSeccion('tickets');
+    document.getElementById('boton-enlace-usuarios').onclick = () => mostrarSeccion('usuarios');
+    document.getElementById('boton-nuevo-ticket').onclick = () => mostrarSeccion('nuevo-ticket');
+    document.getElementById('formulario-usuario').onsubmit = crearUsuario;
+
+    // Modal de usuario
+    modalUsuario = document.getElementById('modal-usuario');
+    document.getElementById('boton-nuevo-usuario').onclick = abrirModalUsuario;
+    document.getElementById('cerrar-modal-usuario').onclick = cerrarModalUsuario;
+
+    // Otros modales
+    document.getElementById('cerrar-modal-editar').onclick = cerrarModalEditar;
+    document.getElementById('cerrar-modal-nota').onclick = cerrarModalNota;
+    document.getElementById('cerrar-modal-transferir').onclick = cerrarModalTransferir;
+}
+
+// Función para abrir el modal de usuario
+function abrirModalUsuario() {
+    document.getElementById('titulo-modal-usuario').textContent = "Crear Usuario";
+    document.getElementById('formulario-usuario').reset(); // Limpiar el formulario
+    modalUsuario.style.display = 'block';
+}
+
+// Función para cerrar el modal de usuario
+function cerrarModalUsuario() {
+    modalUsuario.style.display = 'none';
+}
 
 // Función para el inicio de sesión
-function login(event) {
+function iniciarSesion(event) {
     event.preventDefault();
     
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const usuario = document.getElementById('usuario').value;
+    const contrasena = document.getElementById('contrasena').value;
     
-    const user = users.find(user => user.username === username && user.password === password);
+    const usuarioEncontrado = usuarios.find(user => user.nombreUsuario === usuario && user.contrasena === contrasena);
     
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        showDashboard(user.role);
+    if (usuarioEncontrado) {
+        usuarioActual = usuarioEncontrado;
+        localStorage.setItem('usuarioActual', JSON.stringify(usuarioEncontrado));
+        mostrarDashboard(usuarioEncontrado.rol);
     } else {
         alert('Usuario o contraseña incorrectos.');
     }
 }
 
 // Función para mostrar el dashboard según el rol del usuario
-function showDashboard(role) {
-    document.getElementById('login-container').style.display = 'none';
-    document.getElementById('dashboard-container').style.display = 'flex';
+function mostrarDashboard(rol) {
+    document.getElementById('contenedor-login').style.display = 'none';
+    document.getElementById('contenedor-dashboard').style.display = 'flex';
     
-    if (role === 'admin') {
-        document.getElementById('usuarios-link').style.display = 'block';
+    if (rol === 'admin') {
+        document.getElementById('enlace-usuarios').style.display = 'block';
         cargarUsuarios();
     } else {
-        document.getElementById('usuarios-link').style.display = 'none';
+        document.getElementById('enlace-usuarios').style.display = 'none';
     }
 
     // Mostrar información del usuario
-    document.getElementById('user-name').innerText = `${currentUser.nombre} ${currentUser.apellido}`;
-    document.getElementById('user-department').innerText = currentUser.department;
+    document.getElementById('nombre-usuario').innerText = `${usuarioActual.nombre} ${usuarioActual.apellido}`;
+    document.getElementById('departamento-usuario').innerText = usuarioActual.departamento;
 
     cargarResumenTickets();
     cargarHistorial();
 }
 
 // Función para mostrar la sección seleccionada
-function showSection(sectionId) {
-    const sections = document.querySelectorAll('.section');
-    sections.forEach(section => section.style.display = 'none');
+function mostrarSeccion(idSeccion) {
+    const secciones = document.querySelectorAll('.seccion');
+    secciones.forEach(seccion => seccion.style.display = 'none');
     
-    document.getElementById(sectionId).style.display = 'block';
+    document.getElementById(idSeccion).style.display = 'block';
     
-    if (sectionId === 'tickets') {
+    if (idSeccion === 'tickets') {
         cargarTickets();
-    } else if (sectionId === 'usuarios') {
+    } else if (idSeccion === 'usuarios') {
         cargarUsuarios();
     }
 }
 
 // Función para cerrar sesión
-function logout() {
-    localStorage.removeItem('currentUser');
-    currentUser = null;
-    showLogin();
+function cerrarSesion() {
+    localStorage.removeItem('usuarioActual');
+    usuarioActual = null;
+    mostrarLogin();
 }
 
 // Función para mostrar la pantalla de inicio de sesión
-function showLogin() {
-    document.getElementById('login-container').style.display = 'block';
-    document.getElementById('dashboard-container').style.display = 'none';
+function mostrarLogin() {
+    document.getElementById('contenedor-login').style.display = 'block';
+    document.getElementById('contenedor-dashboard').style.display = 'none';
 }
 
 // Función para crear o editar un usuario
-function createUser(event) {
+function crearUsuario(event) {
     event.preventDefault();
 
     const nombreUsuario = document.getElementById('nombre-usuario').value;
-    const passwordUsuario = document.getElementById('password-usuario').value;
+    const contrasenaUsuario = document.getElementById('contrasena-usuario').value;
     const nombre = document.getElementById('nombre').value;
     const apellido = document.getElementById('apellido').value;
     const cargo = document.getElementById('cargo').value;
     const area = document.getElementById('area').value;
-    const mail = document.getElementById('mail').value;
+    const correo = document.getElementById('correo').value;
     const administra = document.getElementById('administra').value;
-    const editUserIndex = document.getElementById('edit-user-index').value;
+    const indiceEditarUsuario = document.getElementById('indice-editar-usuario').value;
 
-    const user = {
-        username: nombreUsuario,
-        password: passwordUsuario,
-        role: administra === 'si' ? 'admin' : 'usuario',
-        department: area,
+    const usuario = {
+        nombreUsuario: nombreUsuario,
+        contrasena: contrasenaUsuario,
+        rol: administra === 'si' ? 'admin' : 'usuario',
+        departamento: area,
         nombre: nombre,
         apellido: apellido,
-        mail: mail,
+        correo: correo,
         administra: administra
     };
 
-    if (editUserIndex) {
-        users[editUserIndex] = user;
-        addHistory(`Usuario ${user.username} actualizado por ${currentUser.username}`);
+    if (indiceEditarUsuario) {
+        usuarios[indiceEditarUsuario] = usuario;
+        agregarHistorial(`Usuario ${usuario.nombreUsuario} actualizado por ${usuarioActual.nombreUsuario}`);
     } else {
-        users.push(user);
-        addHistory(`Usuario ${user.username} creado por ${currentUser.username}`);
+        usuarios.push(usuario);
+        agregarHistorial(`Usuario ${usuario.nombreUsuario} creado por ${usuarioActual.nombreUsuario}`);
     }
 
-    alert(editUserIndex ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
     cargarUsuarios();
-
-    // Limpia el formulario
-    document.getElementById('edit-user-index').value = '';
-    document.getElementById('nombre-usuario').value = '';
-    document.getElementById('password-usuario').value = '';
-    document.getElementById('nombre').value = '';
-    document.getElementById('apellido').value = '';
-    document.getElementById('cargo').value = '';
-    document.getElementById('area').value = '';
-    document.getElementById('mail').value = '';
-    document.getElementById('administra').value = '';
+    cerrarModalUsuario(); // Cerrar el modal después de guardar el usuario
 }
 
 // Función para cargar usuarios en la tabla de usuarios
@@ -137,41 +176,44 @@ function cargarUsuarios() {
     const tbody = document.getElementById('tabla-usuarios').getElementsByTagName('tbody')[0];
     tbody.innerHTML = '';
 
-    users.forEach((user, index) => {
-        const row = tbody.insertRow();
-        row.insertCell().innerText = user.username;
-        row.insertCell().innerText = user.password;
-        row.insertCell().innerText = user.nombre || 'undefined';
-        row.insertCell().innerText = user.apellido || 'undefined';
-        row.insertCell().innerText = user.role;
-        row.insertCell().innerText = user.department;
-        row.insertCell().innerText = user.mail || 'undefined';
-        row.insertCell().innerText = user.administra;
+    usuarios.forEach((usuario, indice) => {
+        const fila = tbody.insertRow();
+        fila.insertCell().innerText = usuario.nombreUsuario;
+        fila.insertCell().innerText = usuario.contrasena;
+        fila.insertCell().innerText = usuario.nombre || 'undefined';
+        fila.insertCell().innerText = usuario.apellido || 'undefined';
+        fila.insertCell().innerText = usuario.rol;
+        fila.insertCell().innerText = usuario.departamento;
+        fila.insertCell().innerText = usuario.correo || 'undefined';
+        fila.insertCell().innerText = usuario.administra;
         
-        const accionesCell = row.insertCell();
-        const editButton = document.createElement('button');
-        editButton.innerText = 'Editar';
-        editButton.onclick = () => editarUsuario(index);
-        accionesCell.appendChild(editButton);
+        const celdaAcciones = fila.insertCell();
+        const botonEditar = document.createElement('button');
+        botonEditar.innerText = 'Editar';
+        botonEditar.onclick = () => editarUsuario(indice);
+        celdaAcciones.appendChild(botonEditar);
     });
 }
 
 // Función para editar un usuario
-function editarUsuario(index) {
-    const user = users[index];
-    document.getElementById('edit-user-index').value = index;
-    document.getElementById('nombre-usuario').value = user.username;
-    document.getElementById('password-usuario').value = user.password;
-    document.getElementById('nombre').value = user.nombre;
-    document.getElementById('apellido').value = user.apellido;
-    document.getElementById('cargo').value = user.role;
-    document.getElementById('area').value = user.department;
-    document.getElementById('mail').value = user.mail;
-    document.getElementById('administra').value = user.administra;
+function editarUsuario(indice) {
+    const usuario = usuarios[indice];
+    document.getElementById('indice-editar-usuario').value = indice;
+    document.getElementById('nombre-usuario').value = usuario.nombreUsuario;
+    document.getElementById('contrasena-usuario').value = usuario.contrasena;
+    document.getElementById('nombre').value = usuario.nombre;
+    document.getElementById('apellido').value = usuario.apellido;
+    document.getElementById('cargo').value = usuario.rol;
+    document.getElementById('area').value = usuario.departamento;
+    document.getElementById('correo').value = usuario.correo;
+    document.getElementById('administra').value = usuario.administra;
+
+    document.getElementById('titulo-modal-usuario').textContent = "Editar Usuario";
+    modalUsuario.style.display = 'block'; // Mostrar el modal para editar
 }
 
 // Función para crear un nuevo ticket
-function createTicket(event) {
+function crearTicket(event) {
     event.preventDefault();
 
     const tipo = document.getElementById('tipo').value;
@@ -191,23 +233,30 @@ function createTicket(event) {
         estado: estado,
         fecha: new Date().toISOString(),
         ultimaActualizacion: new Date().toISOString(),
-        creador: currentUser.username,
+        creador: usuarioActual.nombreUsuario,
         asignadoA: [],
         notas: []
     };
 
+    // Lógica para asignar el ticket a usuarios específicos
     if (usuario === 'Todos') {
         // Asigna el ticket a todos los usuarios del departamento seleccionado
-        ticket.asignadoA = users.filter(user => user.department === departamento).map(user => user.username);
+        ticket.asignadoA = usuarios
+            .filter(user => user.departamento === departamento)
+            .map(user => user.nombreUsuario);
     } else {
-        // Asigna el ticket a un usuario específico
-        ticket.asignadoA = [usuario];
+        // Asigna el ticket al usuario específico seleccionado
+        ticket.asignadoA.push(usuario);
+    }
+
+    // Verifica si se asignaron usuarios al ticket
+    if (ticket.asignadoA.length === 0) {
+        alert("No se pudo asignar el ticket. Verifique que el departamento o usuario seleccionado exista.");
+        return;
     }
 
     tickets.push(ticket);
-    addHistory(`Ticket ${titulo} creado por ${currentUser.username}`);
-
-    alert('Ticket creado exitosamente');
+    agregarHistorial(`Ticket ${titulo} creado por ${usuarioActual.nombreUsuario} y asignado a ${ticket.asignadoA.join(', ')}`);
 
     // Limpia el formulario
     document.getElementById('tipo').value = '';
@@ -222,275 +271,265 @@ function createTicket(event) {
     cargarResumenTickets();
 }
 
-// Función para actualizar los usuarios basados en el departamento seleccionado
-function updateUsuarios() {
-    const departamento = document.getElementById('departamento').value;
-    const usuarioSelect = document.getElementById('usuario');
-
-    // Limpia las opciones actuales
-    usuarioSelect.innerHTML = '<option value="Todos">Todos</option>';
-
-    // Filtra y agrega usuarios del departamento seleccionado
-    users.filter(user => user.department === departamento)
-        .forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.username;
-            option.text = user.username;
-            usuarioSelect.appendChild(option);
-        });
-}
-
 // Función para cargar tickets
 function cargarTickets() {
     const tbody = document.getElementById('tabla-tickets').getElementsByTagName('tbody')[0];
     tbody.innerHTML = '';
 
     // Tickets creados por el usuario
-    let creadosHeaderAdded = false;
+    let encabezadoCreadosAgregado = false;
     tickets.forEach(ticket => {
-        if (ticket.creador === currentUser.username) {
-            if (!creadosHeaderAdded) {
-                const headerRow = tbody.insertRow();
-                const headerCell = headerRow.insertCell();
-                headerCell.colSpan = 9;
-                headerCell.style.fontWeight = 'bold';
-                headerCell.style.textAlign = 'center';
-                headerCell.textContent = 'Tickets Creados';
-                creadosHeaderAdded = true;
+        if (ticket.creador === usuarioActual.nombreUsuario) {
+            if (!encabezadoCreadosAgregado) {
+                const filaEncabezado = tbody.insertRow();
+                const celdaEncabezado = filaEncabezado.insertCell();
+                celdaEncabezado.colSpan = 9;
+                celdaEncabezado.style.fontWeight = 'bold';
+                celdaEncabezado.style.textAlign = 'center';
+                celdaEncabezado.textContent = 'Tickets Creados';
+                encabezadoCreadosAgregado = true;
             }
             agregarFilaTicket(tbody, ticket);
         }
     });
 
     // Separador
-    const separadorRow = tbody.insertRow();
-    const separadorCell = separadorRow.insertCell();
-    separadorCell.colSpan = 9;
-    separadorCell.style.borderTop = '2px solid black';
+    const filaSeparador = tbody.insertRow();
+    const celdaSeparador = filaSeparador.insertCell();
+    celdaSeparador.colSpan = 9;
+    celdaSeparador.style.borderTop = '2px solid black';
 
     // Tickets asignados al usuario
-    let asignadosHeaderAdded = false;
+    let encabezadoAsignadosAgregado = false;
     tickets.forEach(ticket => {
-        if (ticket.asignadoA.includes(currentUser.username) && ticket.creador !== currentUser.username) {
-            if (!asignadosHeaderAdded) {
-                const headerRow = tbody.insertRow();
-                const headerCell = headerRow.insertCell();
-                headerCell.colSpan = 9;
-                headerCell.style.fontWeight = 'bold';
-                headerCell.style.textAlign = 'center';
-                headerCell.textContent = 'Tickets Asignados';
-                asignadosHeaderAdded = true;
+        if (ticket.asignadoA.includes(usuarioActual.nombreUsuario) && ticket.creador !== usuarioActual.nombreUsuario) {
+            if (!encabezadoAsignadosAgregado) {
+                const filaEncabezado = tbody.insertRow();
+                const celdaEncabezado = filaEncabezado.insertCell();
+                celdaEncabezado.colSpan = 9;
+                celdaEncabezado.style.fontWeight = 'bold';
+                celdaEncabezado.style.textAlign = 'center';
+                celdaEncabezado.textContent = 'Tickets Asignados';
+                encabezadoAsignadosAgregado = true;
             }
             agregarFilaTicket(tbody, ticket);
         }
     });
+
+    generarGraficoTickets();
 }
 
 // Función para agregar una fila de ticket a la tabla
 function agregarFilaTicket(tbody, ticket) {
-    const row = tbody.insertRow();
-    row.insertCell().innerText = ticket.asunto;
-    row.insertCell().innerText = ticket.proyecto;
-    row.insertCell().innerText = ticket.tipo;
-    row.insertCell().innerText = ticket.descripcion;
-    row.insertCell().innerText = ticket.prioridad;
-    row.insertCell().innerText = ticket.estado;
-    row.insertCell().innerText = ticket.fecha;
-    row.insertCell().innerText = ticket.ultimaActualizacion;
+    const fila = tbody.insertRow();
+    fila.insertCell().innerText = ticket.asunto;
+    fila.insertCell().innerText = ticket.proyecto;
+    fila.insertCell().innerText = ticket.tipo;
+    fila.insertCell().innerText = ticket.descripcion;
+    fila.insertCell().innerText = ticket.prioridad;
+    fila.insertCell().innerText = ticket.estado;
+    fila.insertCell().innerText = ticket.fecha;
+    fila.insertCell().innerText = ticket.ultimaActualizacion;
 
-    const accionesCell = row.insertCell();
+    const celdaAcciones = fila.insertCell();
     
-    const notaButton = document.createElement('button');
-    notaButton.innerText = 'Agregar Nota';
-    notaButton.onclick = () => openNotaModal(ticket);
-    accionesCell.appendChild(notaButton);
-    
-    const editButton = document.createElement('button');
-    editButton.innerText = 'Editar';
-    editButton.onclick = () => openEditModal(ticket); // Aquí cambiamos para abrir el modal
-    accionesCell.appendChild(editButton);
-    
-    const deleteButton = document.createElement('button');
-    deleteButton.innerText = 'Borrar';
-    deleteButton.onclick = () => borrarTicket(ticket);
-    accionesCell.appendChild(deleteButton);
+    const botonNota = document.createElement('button');
+    botonNota.innerText = 'Agregar Nota';
+    botonNota.onclick = () => abrirModalNota(ticket);
+    celdaAcciones.appendChild(botonNota);
 
-    const transferButton = document.createElement('button');
-    transferButton.innerText = 'Transferir';
-    transferButton.onclick = () => openTransferModal(ticket);
-    accionesCell.appendChild(transferButton);
+    const botonEditar = document.createElement('button');
+    botonEditar.innerText = 'Editar';
+    botonEditar.disabled = (ticket.estado === 'Finalizado');  // Deshabilitar si el estado es "Finalizado"
+    botonEditar.onclick = () => abrirModalEditar(ticket);
+    celdaAcciones.appendChild(botonEditar);
+
+    const botonBorrar = document.createElement('button');
+    botonBorrar.innerText = 'Borrar';
+    botonBorrar.onclick = () => borrarTicket(ticket);
+    celdaAcciones.appendChild(botonBorrar);
+
+    const botonTransferir = document.createElement('button');
+    botonTransferir.innerText = 'Transferir';
+    botonTransferir.onclick = () => abrirModalTransferir(ticket);
+    celdaAcciones.appendChild(botonTransferir);
 }
 
 // Función para borrar un ticket
 function borrarTicket(ticket) {
-    const index = tickets.indexOf(ticket);
-    if (index > -1) {
-        tickets.splice(index, 1);
-        addHistory(`Ticket ${ticket.asunto} borrado por ${currentUser.username}`);
-        cargarTickets();
-        alert('Ticket borrado exitosamente');
+    const confirmacion = confirm(`¿Estás seguro de que quieres borrar el ticket "${ticket.asunto}"?`);
+    if (confirmacion) {
+        const index = tickets.indexOf(ticket);
+        if (index !== -1) {
+            tickets.splice(index, 1); // Elimina el ticket del array
+            agregarHistorial(`Ticket ${ticket.asunto} borrado por ${usuarioActual.nombreUsuario}`);
+            cargarTickets(); // Recarga la lista de tickets
+            cargarResumenTickets(); // Actualiza el resumen de tickets
+        } else {
+            alert("El ticket no se encontró y no pudo ser borrado.");
+        }
     }
-    cargarResumenTickets();
-}
-
-// Función para cambiar el estado de un ticket
-function cambiarEstadoTicket(ticket, nuevoEstado) {
-    ticket.estado = nuevoEstado;
-    ticket.ultimaActualizacion = new Date().toISOString();
-    addHistory(`Estado del ticket ${ticket.asunto} actualizado a ${nuevoEstado} por ${currentUser.username}`);
-    cargarTickets();
-    alert('Estado del ticket actualizado');
 }
 
 // Función para abrir el modal de edición de ticket
-function openEditModal(ticket) {
-    ticketToEdit = ticket;
-    document.getElementById('edit-titulo').value = ticket.asunto;
-    document.getElementById('edit-tipo').value = ticket.tipo;
-    document.getElementById('edit-descripcion').value = ticket.descripcion;
-    document.getElementById('edit-prioridad').value = ticket.prioridad;
-    document.getElementById('edit-estado').value = ticket.estado;
-    document.getElementById('edit-modal').style.display = 'block';
+function abrirModalEditar(ticket) {
+    if (ticket.estado === 'Finalizado') {
+        return; // No permitir abrir el modal si el ticket está "Finalizado"
+    }
+
+    ticketAEditar = ticket;
+    document.getElementById('editar-titulo').value = ticket.asunto;
+    document.getElementById('editar-tipo').value = ticket.tipo;
+    document.getElementById('editar-descripcion').value = ticket.descripcion;
+    document.getElementById('editar-prioridad').value = ticket.prioridad;
+    document.getElementById('editar-estado').value = ticket.estado;
+    document.getElementById('modal-editar').style.display = 'block';
 }
 
 // Función para cerrar el modal de edición de ticket
-function closeEditModal() {
-    ticketToEdit = null;
-    document.getElementById('edit-modal').style.display = 'none';
+function cerrarModalEditar() {
+    ticketAEditar = null;
+    document.getElementById('modal-editar').style.display = 'none';
 }
 
 // Función para guardar los cambios del ticket editado
-function saveTicketChanges(event) {
+function guardarCambiosTicket(event) {
     event.preventDefault();
     
-    ticketToEdit.asunto = document.getElementById('edit-titulo').value;
-    ticketToEdit.tipo = document.getElementById('edit-tipo').value;
-    ticketToEdit.descripcion = document.getElementById('edit-descripcion').value;
-    ticketToEdit.prioridad = document.getElementById('edit-prioridad').value;
-    ticketToEdit.estado = document.getElementById('edit-estado').value;
-    ticketToEdit.ultimaActualizacion = new Date().toISOString();
+    ticketAEditar.asunto = document.getElementById('editar-titulo').value;
+    ticketAEditar.tipo = document.getElementById('editar-tipo').value;
+    ticketAEditar.descripcion = document.getElementById('editar-descripcion').value;
+    ticketAEditar.prioridad = document.getElementById('editar-prioridad').value;
+    ticketAEditar.estado = document.getElementById('editar-estado').value;
+    ticketAEditar.ultimaActualizacion = new Date().toISOString();
     
-    addHistory(`Ticket ${ticketToEdit.asunto} editado por ${currentUser.username}`);
+    agregarHistorial(`Ticket ${ticketAEditar.asunto} editado por ${usuarioActual.nombreUsuario}`);
     cargarTickets();
-    closeEditModal();
-    alert('Cambios guardados exitosamente');
+    cerrarModalEditar();
 }
 
 // Función para abrir el modal de agregar nota
-function openNotaModal(ticket) {
-    ticketToAddNota = ticket;
-    document.getElementById('nota-modal').style.display = 'block';
+function abrirModalNota(ticket) {
+    ticketParaAgregarNota = ticket;
+    document.getElementById('modal-nota').style.display = 'block';
 }
 
 // Función para cerrar el modal de agregar nota
-function closeNotaModal() {
-    ticketToAddNota = null;
-    document.getElementById('nota-modal').style.display = 'none';
+function cerrarModalNota() {
+    ticketParaAgregarNota = null;
+    document.getElementById('modal-nota').style.display = 'none';
 }
 
 // Función para guardar la nota
-function saveNota(event) {
+function guardarNota(event) {
     event.preventDefault();
 
-    const nota = document.getElementById('nota-contenido').value;
+    const nota = document.getElementById('contenido-nota').value;
     if (nota) {
-        const notaCompleta = `${new Date().toLocaleString()} - ${currentUser.username}: ${nota}`;
-        ticketToAddNota.descripcion += `\n${notaCompleta}`;
-        ticketToAddNota.ultimaActualizacion = new Date().toISOString();
-        addHistory(`Nota agregada al ticket ${ticketToAddNota.asunto} por ${currentUser.username}`);
+        const notaCompleta = `${new Date().toLocaleString()} - ${usuarioActual.nombreUsuario}: ${nota}`;
+        ticketParaAgregarNota.descripcion += `\n${notaCompleta}`;
+        ticketParaAgregarNota.ultimaActualizacion = new Date().toISOString();
+        agregarHistorial(`Nota agregada al ticket ${ticketParaAgregarNota.asunto} por ${usuarioActual.nombreUsuario}`);
         cargarTickets();
-        closeNotaModal();
-        alert('Nota guardada exitosamente');
+        cerrarModalNota();
     }
 }
 
 // Función para abrir el modal de transferencia de ticket
-function openTransferModal(ticket) {
-    transferTicketObj = ticket;
-    document.getElementById('transfer-modal').style.display = 'block';
+function abrirModalTransferir(ticket) {
+    ticketParaTransferir = ticket;
+    document.getElementById('modal-transferir').style.display = 'block';
 }
 
 // Función para cerrar el modal de transferencia de ticket
-function closeTransferModal() {
-    transferTicketObj = null;
-    document.getElementById('transfer-modal').style.display = 'none';
+function cerrarModalTransferir() {
+    ticketParaTransferir = null;
+    document.getElementById('modal-transferir').style.display = 'none';
 }
 
 // Función para transferir un ticket
-function transferTicket(event) {
+function transferirTicket(event) {
     event.preventDefault();
 
-    const departamento = document.getElementById('transfer-departamento').value;
-    const usuario = document.getElementById('transfer-usuario').value;
+    const departamento = document.getElementById('transferir-departamento').value;
+    const usuario = document.getElementById('transferir-usuario').value;
 
     if (usuario === 'Todos') {
         // Asigna el ticket a todos los usuarios del departamento
-        transferTicketObj.asignadoA = users.filter(user => user.department === departamento).map(user => user.username);
+        ticketParaTransferir.asignadoA = usuarios.filter(user => user.departamento === departamento).map(user => user.nombreUsuario);
     } else {
         // Asigna el ticket a un usuario específico
-        transferTicketObj.asignadoA = [usuario];
+        ticketParaTransferir.asignadoA = [usuario];
     }
 
-    transferTicketObj.ultimaActualizacion = new Date().toISOString();
-    addHistory(`Ticket ${transferTicketObj.asunto} transferido a ${usuario} por ${currentUser.username}`);
+    ticketParaTransferir.ultimaActualizacion = new Date().toISOString();
+    agregarHistorial(`Ticket ${ticketParaTransferir.asunto} transferido a ${usuario} por ${usuarioActual.nombreUsuario}`);
     cargarTickets();
-    closeTransferModal();
-    alert('Ticket transferido exitosamente');
-}
-
-// Función para actualizar los usuarios del modal de transferencia basados en el departamento seleccionado
-function updateTransferUsuarios() {
-    const departamento = document.getElementById('transfer-departamento').value;
-    const usuarioSelect = document.getElementById('transfer-usuario');
-
-    // Limpia las opciones actuales
-    usuarioSelect.innerHTML = '<option value="Todos">Todos</option>';
-
-    // Filtra y agrega usuarios del departamento seleccionado
-    users.filter(user => user.department === departamento)
-        .forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.username;
-            option.text = user.username;
-            usuarioSelect.appendChild(option);
-        });
+    cerrarModalTransferir();
 }
 
 // Función para agregar una entrada al historial
-function addHistory(entry) {
-    history.push(`${new Date().toLocaleString()}: ${entry}`);
+function agregarHistorial(entrada) {
+    historial.push(`${new Date().toLocaleString()}: ${entrada}`);
     cargarHistorial();
 }
 
 // Función para cargar el historial de actividades del usuario logueado
 function cargarHistorial() {
-    const historyList = document.getElementById('history-list');
-    historyList.innerHTML = '';
+    const listaHistorial = document.getElementById('lista-historial');
+    listaHistorial.innerHTML = '';
 
-    history
-        .filter(entry => entry.includes(currentUser.username)) // Filtra solo las actividades del usuario actual
-        .forEach(entry => {
-            const listItem = document.createElement('li');
-            listItem.textContent = entry;
-            historyList.appendChild(listItem);
+    historial
+        .filter(entrada => entrada.includes(usuarioActual.nombreUsuario)) // Filtra solo las actividades del usuario actual
+        .forEach(entrada => {
+            const itemLista = document.createElement('li');
+            itemLista.textContent = entrada;
+            listaHistorial.appendChild(itemLista);
         });
 }
 
 // Función para cargar un resumen de los tickets
 function cargarResumenTickets() {
-    const ticketsAsignados = tickets.filter(ticket => ticket.asignadoA.includes(currentUser.username));
-    const ticketsCreados = tickets.filter(ticket => ticket.creador === currentUser.username);
+    const ticketsAsignados = tickets.filter(ticket => ticket.asignadoA.includes(usuarioActual.nombreUsuario));
+    const ticketsCreados = tickets.filter(ticket => ticket.creador === usuarioActual.nombreUsuario);
 
-    document.getElementById('ticket-count-assigned').innerText = ticketsAsignados.length;
-    document.getElementById('ticket-count-created').innerText = ticketsCreados.length;
+    document.getElementById('contador-tickets-asignados').innerText = ticketsAsignados.length;
+    document.getElementById('contador-tickets-creados').innerText = ticketsCreados.length;
 }
 
-// Al cargar la página, verificar si hay un usuario en el almacenamiento local
-window.onload = function() {
-    currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (currentUser) {
-        showDashboard(currentUser.role);
-    } else {
-        showLogin();
+// Función para generar el gráfico de tickets con Chart.js
+function generarGraficoTickets() {
+    const ctx = document.getElementById('grafico-tickets').getContext('2d');
+    const estados = ['Pendiente', 'En desarrollo', 'Cancelado', 'Finalizado'];
+    const conteoEstados = estados.map(estado => tickets.filter(ticket => ticket.estado === estado).length);
+
+    // Destruye el gráfico existente antes de crear uno nuevo
+    if (graficoTickets) {
+        graficoTickets.destroy();
     }
+
+    graficoTickets = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: estados,
+            datasets: [{
+                label: 'Estado de Tickets',
+                data: conteoEstados,
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Al cargar la página, cargar los usuarios desde el JSON
+window.onload = function() {
+    cargarUsuariosDesdeJson();
 }

@@ -1,52 +1,7 @@
 [
-    {
-        "nombreUsuario": "admin",
-        "contrasena": "admin",
-        "rol": "admin",
-        "departamento": "Sistemas",
-        "nombre": "Admin",
-        "apellido": "Admin",
-        "correo": "sistemas@andretich.com.ar",
-        "administra": "si"
-    },
-    {
-        "nombreUsuario": "ventasu",
-        "contrasena": "ventasu",
-        "rol": "usuario",
-        "departamento": "Ventas",
-        "nombre": "Ventas",
-        "apellido": "Usuario",
-        "correo": "ventas@andretich.com.ar",
-        "administra": "no"
-    },
-    {
-        "nombreUsuario": "mkt",
-        "contrasena": "mktu",
-        "rol": "usuario",
-        "departamento": "Marketing",
-        "nombre": "MKT",
-        "apellido": "Usuario",
-        "correo": "marketing@andretich.com.ar",
-        "administra": "no"
-    },
-    {
-        "nombreUsuario": "ventasg",
-        "contrasena": "ventasg",
-        "rol": "gerente",
-        "departamento": "Ventas",
-        "nombre": "Ventas",
-        "apellido": "Gerente",
-        "correo": "ventas@andretich.com.ar",
-        "administra": "no"
-    },
-    {
-        "nombreUsuario": "mktg",
-        "contrasena": "mktg",
-        "rol": "gerente",
-        "departamento": "Marketing",
-        "nombre": "MKT",
-        "apellido": "Gerente",
-        "correo": "marketing@andretich.com.ar",
-        "administra": "no"
-    }
+    { "username": "admin", "password": "admin", "role": "admin", "department": "Sistemas", "nombre": "Admin", "apellido": "Admin", "mail": "sistemas@andretich.com.ar", "administra": "si" },
+    { "username": "ventasu", "password": "ventasu", "role": "usuario", "department": "Ventas", "nombre": "Ventas", "apellido": "Usuario", "mail": "ventas@andretich.com.ar", "administra": "no" },
+    { "username": "mkt", "password": "mktu", "role": "usuario", "department": "Marketing", "nombre": "MKT", "apellido": "Usuario", "mail": "marketing@andretich.com.ar", "administra": "no" },
+    { "username": "ventasg", "password": "ventasg", "role": "gerente", "department": "Ventas", "nombre": "Ventas", "apellido": "Gerente", "mail": "ventas@andretich.com.ar", "administra": "no" },
+    { "username": "mktg", "password": "mktg", "role": "gerente", "department": "Marketing", "nombre": "MKT", "apellido": "Gerente", "mail": "marketing@andretich.com.ar", "administra": "no" }
 ]

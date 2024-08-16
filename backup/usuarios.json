@@ -1,0 +1,32 @@
+[
+    {
+        "nombreUsuario": "admin",
+        "contrasena": "admin",
+        "rol": "admin",
+        "departamento": "Sistemas",
+        "nombre": "Admin",
+        "apellido": "Admin",
+        "correo": "sistemas@andretich.com.ar",
+        "administra": "si"
+    },
+    {
+        "nombreUsuario": "ventasu",
+        "contrasena": "ventasu",
+        "rol": "usuario",
+        "departamento": "Ventas",
+        "nombre": "Ventas",
+        "apellido": "Usuario",
+        "correo": "ventas@andretich.com.ar",
+        "administra": "no"
+    },
+    {
+        "nombreUsuario": "mkt",
+        "contrasena": "mktu",
+        "rol": "usuario",
+        "departamento": "Marketing",
+        "nombre": "MKT",
+        "apellido": "Usuario",
+        "correo": "marketing@andretich.com.ar",
+        "administra": "no"
+    }
+]
